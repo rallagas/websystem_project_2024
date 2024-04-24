@@ -15,7 +15,11 @@
                     echo "Error:" . $_GET['error'];
                 }
                 ?>
-                <form action="process_registration.php" method="post">
+                <form action="process_registration.php" method="POST">
+                    <div class="mb">
+                       <label for="" class="form-label">Fullname</label>
+                        <input name="r_fullname" type="text" class="form-control">
+                    </div>
                     <div class="mb">
                        <label for="" class="form-label">Username</label>
                         <input name="r_username" type="text" class="form-control">
@@ -45,10 +49,10 @@
                              </select>
                          
                     </div>
-                    <div class="mb">
+                    <div class="mb-3">
                         <input type="submit" class="btn btn-success">
                         
-                        <a href="registration.php" class="btn btn-link">Create Account</a>
+                        <a href="index.php" class="btn btn-link">Login</a>
                         
                     </div>
                 </form>

@@ -1,5 +1,5 @@
 <?php
-if(isset($_GET['f_item_name'])){
+if(isset($_GET['f_item_name'])){ //trap
     include_once "db.php";
     
     $item_name = $_GET['f_item_name'];
@@ -10,13 +10,15 @@ if(isset($_GET['f_item_name'])){
                     (`item_name`, `item_desc`, `item_price`)
                       VALUES
                     ('$item_name','$item_desc','$item_price');";
+
     $execute_query=mysqli_query($conn, $sql_insert_item);
-    header("location: index.php?insert_status=1");
-//    if($execute_query){
-//        header("location: index.php?insert_status=1");    
-//    }
-//    else{
-//         header("location: index.php?insert_status=2");    
-//    }
     
+    if($execute_query){
+        echo "Data inserted.";   
+        header("location: index.php?insert_status=1");
+    }
+    
+}
+else{
+    header("location: index.php?you_cant_be_here");
 }

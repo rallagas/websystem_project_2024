@@ -1,14 +1,13 @@
 <?php
 include_once "db.php";
+session_start();
+
+
 if(isset($_POST['f_username'])){
     $uname = $_POST['f_username'];
     $pword = $_POST['f_password'];
     
-    $sql_check_user_info = "SELECT user_info_id
-                                 , user_type
-                                 , user_status
-                                 , fullname
-                                 , address
+    $sql_check_user_info = "SELECT *
                               FROM `user_info`
                             WHERE `username` = '$uname'
                               AND `password` = '$pword'
@@ -19,7 +18,17 @@ if(isset($_POST['f_username'])){
     if($count_result == 1){
         //existing user
         $row = mysqli_fetch_assoc($sql_result);
-        echo $row['user_type'];
+        
+        //create session variables
+        $_SESSION['user_info_id'] = $row['user_info_id'];
+        $_SESSION['user_info_username'] = $row['username'];
+        $_SESSION['user_info_password'] = $row['password'];
+        $_SESSION['user_info_fullname'] = $row['fullname'];
+        $_SESSION['user_info_address'] = $row['address'];
+        $_SESSION['user_info_contact_no'] = $row['contact_no'];
+        $_SESSION['user_info_gender'] = $row['gender'];
+        $_SESSION['user_info_user_type'] = $row['user_type'];
+       
         if($row['user_type'] == 'A'){
             //admin
             header("location: admin");
@@ -34,7 +43,8 @@ if(isset($_POST['f_username'])){
     }
     else{
         //username and password does not exist
-        header("location: registration.php?error=user_not_exist");
+    
+       header("location: registration.php?error=user_not_exist");
     }
 }
 

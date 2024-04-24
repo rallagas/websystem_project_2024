@@ -1,5 +1,16 @@
 <html>
-<?php include_once "db.php"; ?>
+<?php include_once "db.php"; 
+session_start();
+if($_SESSION['user_info_user_type'] == 'A'){
+   header("location: admin/");   
+}
+
+if($_SESSION['user_info_user_type'] == 'C'){
+   header("location: common_user/");
+}
+    
+
+    ?>
    <head>
     <meta charset="UTF-8">
     <title>Document</title>
@@ -101,11 +112,12 @@
            <div class="col-8">
       
                <?php
-               $sql_get_items = "SELECT * FROM `items` order by items_id DESC";
+               
+               $sql_get_items = "SELECT * FROM `items` WHERE `item_status`='A' order by items_id DESC";
                $get_result = mysqli_query($conn, $sql_get_items); ?>
                <table class="table">
                    <?php
-                       while( $row = mysqli_fetch_assoc($get_result) ){ ?>
+                       while ( $row = mysqli_fetch_assoc($get_result) ){ ?>
                         <tr>
                             <td><?php echo $row['item_status'];?></td>
                             <td><?php echo $row['item_name'];?></td>

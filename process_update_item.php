@@ -13,8 +13,9 @@ if(isset($_POST['u_item_name'])){
                               , `item_price`='$item_price'
                         WHERE items_id ='$item_id'";
     //echo $sql_update_item;
-    mysqli_query($conn, $sql_update_item);
-    header("location: index.php?update_status=1");
+    if(mysqli_query($conn, $sql_update_item)) {
+        header("location: index.php?update_status=1");
+    }
 
     
 }
