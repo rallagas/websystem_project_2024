@@ -1,6 +1,7 @@
 <?php
 include "../db.php";
 session_start();
+
 if(isset($_GET['item_id'])){
     $user_id = $_SESSION['user_info_id'];
     $item_id = $_GET['item_id'];
@@ -13,6 +14,6 @@ if(isset($_GET['item_id'])){
     $execute_cart = mysqli_query($conn, $sql_add_to_cart);
     
     if($execute_cart){
-        header("location: index.php?msg=item_{$item_id}_added_to_cart");
+        header("location: index.php?page=home&cart_status=item_{$item_id}_added_to_cart");
     }
 }
