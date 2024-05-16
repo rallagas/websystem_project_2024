@@ -15,8 +15,9 @@ if(isset($_GET['delete_from_cart'])){
     $order_id = $_GET['delete_from_cart'];
     $sql_delete_from_cart = "DELETE FROM orders WHERE orders_id = '$order_id' and order_phase = '1' ";
     $sql_execute = mysqli_query($conn, $sql_delete_from_cart);
+    
     if($sql_execute){
-        header("location: index.php?msg=cart_item_removed");
+        header("location: index.php?page=home&msg=cart item removed.");
     }
 }
 
@@ -130,6 +131,8 @@ if(isset($_GET['delete_from_cart'])){
                                                 while ($co = mysqli_fetch_assoc($result_chkout)){
                                                 //adds up every loop of the result.
                                                 $total_amt = $total_amt + $co['item_price'] * $co['item_qty'];
+
+                                    
                                                 ?>
 
                                                     <li class="list-group-item"><?php echo $co['item_name'] . " - Php " . number_format($co['item_price'],2) . " x " . $co['item_qty'] . " pcs";?></li>
@@ -150,6 +153,17 @@ if(isset($_GET['delete_from_cart'])){
                                                         $sql_get_payment_method = "SELECT * FROM `payment_method`";
                                                         $payment_method_result = mysqli_query($conn, $sql_get_payment_method);;
 
+                                                    <label for="">Alternate Receiver Name:</label>
+                                                        <input type="text" class="form-control mb-3" placeholder="This is Optional" name="f_alt_receiver">
+                                                    <label for="">Ship to this Address:</label>
+                                                        <input type="text" class="form-control mb-3" placeholder="This is Optional" name="f_alt_address">
+                                                    <label for="" class="form-label">Payment Method:</label> 
+                                                    <select name="f_payment_method" id="" class="form-select mb-3">
+                                                        <?php  
+                                                        $sql_get_payment_method = "SELECT * FROM `payment_method`";
+                                                        $payment_method_result = mysqli_query($conn, $sql_get_payment_method);
+
+
                                                         while($pm = mysqli_fetch_assoc($payment_method_result)){ ?>
                                                             <option value="<?php echo $pm['payment_method_id'];?>"><?php echo $pm['payment_method_desc'];?></option>
                                                         <?php }
@@ -157,6 +171,21 @@ if(isset($_GET['delete_from_cart'])){
 
                                                     </select>
                                                     <input hidden type="text" name="f_order_ref_number" value="<?php echo $order_number; ?>">
+
+                                                    
+                                                    <label for="">Shipping Options:</label>
+                                                        <select name="f_ship_option" class="form-select mb-2" id="">
+                                                                                           <?php  
+                                                        $sql_get_shipping_method = "SELECT * FROM `shippers`";
+                                                        $shipping_method_result = mysqli_query($conn, $sql_get_shipping_method);;
+
+                                                        while($pm = mysqli_fetch_assoc($shipping_method_result)){ ?>
+                                                            <option value="<?php echo $pm['shipper_id'];?>"><?php echo $pm['shipping_company'];?></option>
+                                                        <?php }
+                                                        ?>
+                                                        </select>
+                                                    
+                                                    <input readonly hidden type="text" name="f_order_ref_number" value="<?php echo $order_number; ?>">
 
                                                     <input type="submit" value="Place Order" class="btn btn-warning">
                                                 </div>
@@ -179,7 +208,7 @@ if(isset($_GET['delete_from_cart'])){
                                             </div>
                                 <?php   }  
                                         else{
-                                            $status = "Order Failed.";
+                                            $status = $_GET['msg'];
                                             ?>
                                             <div class="alert alert-danger">
                                                  <?php echo $status;?>
@@ -202,7 +231,7 @@ if(isset($_GET['delete_from_cart'])){
                                                              JOIN `items` as i
                                                                ON (o.item_id = i.items_id)
                                                             WHERE o.user_id='$s_user_id' 
-                                                              AND o.order_phase='1'";
+                                                              AND o.order_phase='1' ";
 
                                     $cart_results = mysqli_query($conn, $sql_get_cart_items);
                                 echo "<table class='table'>";
@@ -231,25 +260,17 @@ if(isset($_GET['delete_from_cart'])){
                                                   o.order_ref_number
                                                 , pm.payment_method_desc
                                                 , op.order_phase_desc
+                                                , o.order_phase
+                                                , o.alternate_receiver
+                                                , o.alternate_address
                                              FROM `orders` as o
                                              JOIN `payment_method` as pm
                                                ON o.payment_method = pm.payment_method_id
                                              JOIN `order_phase` as op
                                                ON o.order_phase = op.order_phase_id
-                                            WHERE o.user_id = '$s_user_id' ";                            
-                                                    
-//                        $sql_get_user_item_order = "SELECT o.order_ref_number
-//                                                , pm.payment_method_desc
-//                                                , i.item_name
-//                                                , i.item_img
-//                                                , i.item_price
-//                                             FROM `orders` as o
-//                                             JOIN `items` as i
-//                                               ON o.item_id = i.items_id
-//                                             JOIN `payment_method` as pm
-//                                               ON o.payment_method = pm.payment_method_id
-//                                            WHERE o.user_id = '$s_user_id' ";
-//                    
+                      
+
+                                            WHERE o.user_id = '$s_user_id' ";      
                     $result_orders = mysqli_query($conn, $sql_get_user_order);
                     
                     
@@ -262,7 +283,29 @@ if(isset($_GET['delete_from_cart'])){
                                                     ?>
                                                     <div class="float-end">
                                                     <span class="badge rounded-pill text-bg-success"><?php echo $rec['payment_method_desc'];?></span>
+
                                                     <span class="badge rounded-pill text-bg-primary"><?php echo $rec['order_phase_desc'];?></span>
+
+                                                    <span class="badge rounded-pill 
+                                                        <?php 
+                                                                 switch($rec['order_phase']){
+                                                                     case 0: echo "text-bg-danger";
+                                                                         break;
+                                                                     case 2: echo "text-bg-primary";
+                                                                         break;
+                                                                     case 3: echo "text-bg-info";
+                                                                         break;
+                                                                     case 4: echo "text-bg-warning";
+                                                                         break;
+                                                                     case 5: echo "text-bg-success";
+                                                                         break;
+                                                                     default: echo "text-bg-secondary";
+                                                                 }
+                                                                 ?> "><?php echo $rec['order_phase_desc'];?></span>
+                                                   <?php if($rec['order_phase'] == '2') { ?>
+                                                     <a href="process_cancel_order.php?cancel_order=<?php echo $rec['order_ref_number']; ?>" class="btn btn-danger btn-sm me-1"> x </a>
+                                                   <?php } ?>
+
                                                     </div>
                             </h6>
                                         <?php
@@ -295,6 +338,18 @@ if(isset($_GET['delete_from_cart'])){
                                                 <div class="card-footer">
                                                     <span class="float-end"> Total Amount: <b> <?php echo "Php " . number_format($total_amt,2); ?> </b> </span> 
                                                 </div>
+\
+                                               
+                                                    <?php if($rec['alternate_receiver'] != NULL){ ?>
+                                                         <div class="card-footer">
+                                                               <small class="small">
+                                                                <?php echo "Alternate Receiver: " . $rec['alternate_receiver'] . "<br>"; ?>
+                                                                <?php echo "Alternate Address: " . $rec['alternate_address'] . "<br>"; ?>
+                                                                </small>
+                                                        </div>
+                                                    <?php } ?>
+                                         
+
                              
                          </div>
                      </div>
@@ -303,7 +358,7 @@ if(isset($_GET['delete_from_cart'])){
 <!--                    load the My Order Page-->
                     </div>
                 <?php }
-        
+
     }
   
     ?>
