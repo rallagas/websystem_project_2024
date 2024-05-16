@@ -18,7 +18,8 @@ function gen_order_ref_number($len){
                      ,'U','V','W','X','Y','Z','0','1','2','3'
                      ,'4','5','6','7','8','9','0');
     $key="";
-    for ($i = 0; $i <= $len; $i++){
+
+    for ($i = 0; $i < $len; $i++){
         if($i%2 == 0 && $i > 0){
            $key .= $alpha_num[rand(0,25)];
         }
