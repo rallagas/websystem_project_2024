@@ -145,7 +145,7 @@ if(isset($_GET['logout'])){
               <a href="?manageorder&orderphase=2" class="btn btn-link">New</a>
               <a href="?manageorder&orderphase=3" class="btn btn-link">Pending</a>
               <a href="?manageorder&orderphase=4" class="btn btn-link">To Ship</a>
-              <a href="?manageorder&orderphase=5" class="btn btn-link">Out For Delivery</a>
+              <a href="?manageorder&orderphase=5" class="btn btn-link">Delivered</a>
               <a href="?manageorder&orderphase=0" class="btn btn-link">Cancelled</a>
           </div>
           <div class="container-fluid">
@@ -159,10 +159,17 @@ if(isset($_GET['logout'])){
               <?php
                  $sql_get_user_order = "SELECT DISTINCT 
                                                   o.order_ref_number
+                                                , date(o.date_added) as date_added
                                                 , pm.payment_method_desc
-                                                , op.order_phase_desc
+                                                , o.payment_method
+                                                , op.order_phase_admin
+                                                , o.order_phase
                                                 , ui.fullname
                                                 , ui.address
+                                                , o.gcash_ref_num
+                                                , o.gcash_account_name
+                                                , o.gcash_account_number
+                                                , o.gcash_amount_sent
                                              FROM `orders` as o
                                              JOIN `payment_method` as pm
                                                ON o.payment_method = pm.payment_method_id
@@ -172,22 +179,66 @@ if(isset($_GET['logout'])){
                                                ON o.user_id = ui.user_info_id
                                             WHERE ui.user_type = 'C'
                                               AND ui.user_status = 'A'
-                                              AND o.order_phase = '$orderphase'";      
+                                              AND o.order_phase = '$orderphase'
+                                            ORDER BY o.date_added ASC"
+                                            ;      
                     $result_orders = mysqli_query($conn, $sql_get_user_order);
               
               while($ro = mysqli_fetch_assoc($result_orders)){ //first loop for the order reference number ?> 
                       <div class="col-3">
-                          <div class="card">
+                          <div class="card p-3">
+                                <div class="float-end">
+                                                    <span class="badge rounded-pill text-bg-primary"><?php echo $ro['payment_method_desc'];?></span>
+                                                    <span class="badge rounded-pill 
+                                                        <?php 
+                                                                 switch($ro['order_phase']){
+                                                                     case 0: echo "text-bg-danger";
+                                                                         break;
+                                                                     case 2: echo "text-bg-primary";
+                                                                         break;
+                                                                     case 3: echo "text-bg-info";
+                                                                         break;
+                                                                     case 4: echo "text-bg-warning";
+                                                                         break;
+                                                                     case 5: echo "text-bg-success";
+                                                                         break;
+                                                                     default: echo "text-bg-secondary";
+                                                                 }
+                                                                 ?> "><?php echo $ro['order_phase_admin'];?></span>
+                                                   <?php if($ro['order_phase'] == '2') { ?>
+                                                     <a href="process_cancel_order.php?cancel_order=<?php echo $ro['order_ref_number']; ?>" class="btn btn-danger btn-sm me-1"> x </a>
+                                                   <?php } ?>
+                                                    </div>
+                                                    
                               <p class="card-title">
-                                  <?php echo $ro['order_ref_number'];?> <br>
+                                  <small><i><?php echo $ro['date_added'];?></i></small> <br>
+                                  <b><?php echo $ro['order_ref_number'];?></b> <br>
+                                  
+                                  
                                   
                                   <small>Recipient: <?php echo strtoupper($ro['fullname']);?></small> <br>
                                   <small>Address: <?php echo strtoupper($ro['address']);?></small>
+                                  
+                                  
                               </p>
+                              
+                              <?php
+                             if($ro['payment_method'] == 1 && $ro['order_phase'] == '2'){  ?>
+                                 <div class="card-caption p-2">
+                                     <small class="small">Gcash Reference Number: <?php echo $ro['gcash_ref_num'];?></small> <br>
+                                     <small class="small">Gcash Account Name: <?php echo $ro['gcash_account_name'];?></small> <br>
+                                     <small class="small">Gcash Account Number: <?php echo $ro['gcash_account_number'];?></small> <br>
+                                     <small class="small">Gcash Amount Sent: <?php echo $ro['gcash_amount_sent'];?></small>
+                                 </div>
+                             <?php }
+                             ?>
+                              
                               <?php  
                               $curr_order_ref_number = "";
                               $curr_order_ref_number = $ro['order_ref_number'];
                             
+                                                              
+                                                              
                               $sql_get_order_items = "SELECT i.item_name
                                                           , i.item_img
                                                           , i.item_price
@@ -200,24 +251,40 @@ if(isset($_GET['logout'])){
                                                           
                               ?>
                               <ul class="list-group">
-                                  <?php while ($itord = mysqli_fetch_assoc($order_items_result)){ 
+                                  <?php 
+                                    $total_amt = 0.00;
+                                    while ($itord = mysqli_fetch_assoc($order_items_result)){ 
+                                  
                                   //inner 2nd loop to list all the items of the specified order reference number ?>
                                       
                                   <li class="list-group-item"><?php echo $itord['item_name'] . " x " . $itord['item_qty'] . " = <br><small>" . "Php " . number_format($itord['item_qty'] * $itord['item_price'], 2) . "</small>"; ?></li>
-                                <?php   } ?>
+                                  
+                                <?php
+                                    $total_amt += $itord['item_qty'] * $itord['item_price']; 
+                                    } ?>
                                 
                                 
-                              <li class="list-group-item">
+                                  <li class="list-group-item bg-secondary text-light">
+                                     <?php echo "Php " . number_format($total_amt, 2);?>
+                                      
+                                  </li>
+                             
                                  <?php if($_GET['orderphase'] == '2') { ?>
-                                  <a href="process_confirm_order.php?confirm_order=<?php echo $curr_order_ref_number; ?>" class="btn btn-success">Confirm</a>
+                                  <li class="list-group-item">
+                                      <a href="process_confirm_order.php?confirm_order=<?php echo $curr_order_ref_number; ?>" class="btn btn-success">Confirm</a>
+                                  </li>
                                   <?php } ?>
+                                  
                                  <?php if($_GET['orderphase'] == '3') { ?>
-                                  <a href="process_confirm_order.php?ship_order=<?php echo $curr_order_ref_number; ?>" class="btn btn-primary">Ship</a>
+                                 <li class="list-group-item">
+                                      <a href="process_confirm_order.php?ship_order=<?php echo $curr_order_ref_number; ?>" class="btn btn-primary">Ship</a>
+                                  </li>
                                   <?php } ?>
                                  <?php if($_GET['orderphase'] == '4') { ?>
-                                  <a href="process_confirm_order.php?complete_order=<?php echo $curr_order_ref_number; ?>" class="btn btn-primary">Complete</a>
+                                 <li class="list-group-item">
+                                      <a href="process_confirm_order.php?complete_order=<?php echo $curr_order_ref_number; ?>" class="btn btn-primary">Complete</a>
+                                  </li>
                                   <?php } ?>
-                              </li>    
                               </ul>
                               
                           </div>
