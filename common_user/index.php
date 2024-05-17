@@ -144,6 +144,8 @@ if(isset($_GET['delete_from_cart'])){
 
                                             <form action="process_place_order.php" method="post">
                                                 <div class="mt-3">
+
+                                                   <input type="text" hidden name="f_total_amt_to_pay" value="<?php echo $total_amt; ?>">
                                                     <label for="">Alternate Receiver Name:</label>
                                                         <input type="text" class="form-control mb-3" placeholder="This is Optional" name="f_alt_receiver">
                                                     <label for="">Ship to this Address:</label>
@@ -247,10 +249,15 @@ if(isset($_GET['delete_from_cart'])){
                         $sql_get_user_order = "SELECT DISTINCT 
                                                   o.order_ref_number
                                                 , pm.payment_method_desc
+                                                , o.payment_method
                                                 , op.order_phase_desc
                                                 , o.order_phase
                                                 , o.alternate_receiver
                                                 , o.alternate_address
+                                                , o.gcash_ref_num
+                                                , o.gcash_account_name
+                                                , o.gcash_account_number
+                                                , o.gcash_amount_sent
                                              FROM `orders` as o
                                              JOIN `payment_method` as pm
                                                ON o.payment_method = pm.payment_method_id
@@ -289,7 +296,18 @@ if(isset($_GET['delete_from_cart'])){
                                                      <a href="process_cancel_order.php?cancel_order=<?php echo $rec['order_ref_number']; ?>" class="btn btn-danger btn-sm me-1"> x </a>
                                                    <?php } ?>
                                                     </div>
+                                                    
                             </h6>
+                            <?php
+                             if($rec['payment_method'] == 1){  ?>
+                                 <div class="card-caption p-2">
+                                     <small class="small">Gcash Reference Number: <?php echo $rec['gcash_ref_num'];?></small> <br>
+                                     <small class="small">Gcash Account Name: <?php echo $rec['gcash_account_name'];?></small> <br>
+                                     <small class="small">Gcash Account Number: <?php echo $rec['gcash_account_number'];?></small> <br>
+                                     <small class="small">Gcash Amount Sent: <?php echo $rec['gcash_amount_sent'];?></small>
+                                 </div>
+                             <?php }
+                             ?>
                                         <?php
                                                $sql_get_user_item_order = "SELECT 
                                                                            i.item_name
